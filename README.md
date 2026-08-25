@@ -2,8 +2,10 @@
 
 <p align="center">
   <img src="https://github.com/teamrudra/r26_test/blob/main/misc/rover.webp" width="480" height="480"/>
+R27 Embedded C Coding Test
+
 Problem Statement
-  
+--
 This test evaluates your ability to understand, debug, and implement functionality in an existing C-based embedded/robotics codebase.
 
 The test has three parts:
@@ -15,6 +17,7 @@ Differential-Drive Rover
 You are given an existing codebase with partially implemented functionality. Your task is to understand the code, identify the issues, implement the required changes, and verify your solution.
 
 Part 1 — COBS Encoding & Decoding
+--
 Description
 
 The first part focuses on COBS (Consistent Overhead Byte Stuffing), commonly used in embedded communication.
@@ -24,13 +27,17 @@ Relevant files:
 src/en_dc.c
 lib/en_dc.h
 
+
 What you need to do
+
 Understand the existing encoder and decoder.
 Fix any incorrect or incomplete logic.
 Handle zero bytes and buffer limits correctly.
 Handle invalid/edge-case inputs.
 Verify that encoding and then decoding returns the original data.
+
 Part 2 — Multithreading & Synchronization
+--
 Description
 
 The second part focuses on POSIX threads, mutexes, semaphores, and message queues.
@@ -61,6 +68,7 @@ Correct initialization and cleanup of resources.
 Keep the existing architecture where possible.
 
 Part 3 — Differential-Drive Rover
+
 Description
 
 The final part involves controlling a differential-drive rover.
@@ -85,7 +93,7 @@ What you need to do
 Complete/fix the drive_to_target() functionality so that the rover reaches the target.
 
 Your implementation should:
-
+--
 Calculate the direction to the target.
 Account for the rover's heading.
 Generate appropriate left/right wheel velocities.
@@ -115,6 +123,7 @@ To clean the build:
 
 make clean
 
+
 Time Limit
 
 90 minutes
@@ -139,7 +148,9 @@ What you changed and why.
 How you tested your implementation.
 Any challenges you faced.
 Any external resources or AI tools you used.
+
 Important
+
 Read the existing code before modifying it.
 Do not unnecessarily rewrite working components.
 Do not modify tests just to make them pass.
@@ -160,8 +171,22 @@ Before submitting:
  Document external/AI resources used.
  Commit and push your changes to your fork.
  Submit your repository link.
- Submit the google form below.
 
+Evaluation
+
+The submission will be evaluated on:
+
+Correctness
+C programming skills
+Debugging and problem-solving
+Understanding of the existing code
+Concurrency and synchronization
+Algorithmic reasoning
+Edge-case handling
+Code quality
+Ability to explain your solution
+
+Good luck!
 # Google Form
 https://forms.gle/A8CaByv4ohfrCmmWA
 GOOD LUCK!
