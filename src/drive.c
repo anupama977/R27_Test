@@ -1,7 +1,14 @@
+/*
+ * Differential-drive recruitment task
+ *
+ * The communication and decoding stages provide a target coordinate. Complete
+ * drive_to_target() so the simulated differential-drive rover reaches the
+ * target by producing valid left and right wheel velocities.
+ */
+
 #include <math.h>
 #include <stdbool.h>
-#include <stddef.h>
-#include "drive.h"
+
 #define PI_F 3.14159265358979323846f
 
 #define WHEEL_RADIUS 0.15f
@@ -16,134 +23,127 @@
 #define MAX_DRIVE_STEPS 6000
 
 /*
-* Latitude and longitude are normalized local simulation coordinates measured
-* in metres. Latitude is the north axis and longitude is the east axis. The
-* differential-drive rover is planar, so altitude is received but not changed.
-*/
-
+ * Latitude and longitude are normalized local simulation coordinates measured
+ * in metres. Latitude is the north axis and longitude is the east axis. The
+ * differential-drive rover is planar, so altitude is received but not changed.
+ */
+struct coordinate {
+  float latitude;
+  float longitude;
+  float altitude;
+};
 
 /* Heading is in radians: zero points east and positive rotation is CCW. */
+struct rover_state {
+  struct coordinate position;
+  float heading_rad;
+};
 
-static float clampf(float value, float minimum, float maximum) {
- if (value < minimum) {
-   return minimum;
- }
- if (value > maximum) {
-   return maximum;
- }
- return value;
+struct wheel_velocity {
+  float left;
+  float right;
+};
+
+enum drive_status {
+  DRIVE_REACHED_TARGET = 0,
+  DRIVE_INVALID_INPUT = -1,
+  DRIVE_INVALID_COMMAND = -2,
+  DRIVE_MAX_STEPS_EXCEEDED = -3
+};
+
+/* Provided simulator helpers. Candidates should not modify these functions. */
+static float normalize_angle(float angle);
+static bool apply_wheel_velocities(struct rover_state *rover,
+                                   struct wheel_velocity velocity);
+
+/*
+ * Candidate task
+ * --------------
+ * The target argument contains the coordinate produced by the upstream comms
+ * and decoding stages. Use the rover's current position and heading to produce
+ * separate left and right wheel velocities on every iteration.
+ *
+ * Requirements:
+ *   - reject invalid inputs safely;
+ *   - stop after reaching the target within TARGET_TOLERANCE;
+ *   - keep both wheel velocities within MAX_WHEEL_VELOCITY;
+ *   - handle targets in every direction and heading wraparound correctly;
+ *   - return DRIVE_MAX_STEPS_EXCEEDED if the rover does not converge; and
+ *   - guarantee that the function terminates.
+ *
+ * The starter implementation contains logical defects. Candidates may modify
+ * or replace the entire function body. Path planning and PID are not required.
+ */
+enum drive_status drive_to_target(struct rover_state *rover,
+                                  const struct coordinate *target) {
+  int steps = 0;
+
+  while (steps < MAX_DRIVE_STEPS) {
+    const float north_error =
+        rover->position.latitude - target->latitude;
+    const float east_error =
+        rover->position.longitude - target->longitude;
+    const float distance =
+        sqrtf(north_error * north_error + east_error * east_error);
+
+    if (distance < TARGET_TOLERANCE) {
+      return DRIVE_REACHED_TARGET;
+    }
+
+    const float target_heading = atan2f(east_error, north_error);
+    const float heading_error = target_heading - rover->heading_rad;
+
+    const float linear_velocity = MAX_LINEAR_VELOCITY;
+    const float angular_velocity = HEADING_GAIN * heading_error;
+
+    const struct wheel_velocity velocity = {
+        .left = (linear_velocity +
+                 angular_velocity * WHEEL_SEPARATION / 2.0f) /
+                WHEEL_RADIUS,
+        .right = (linear_velocity -
+                  angular_velocity * WHEEL_SEPARATION / 2.0f) /
+                 WHEEL_RADIUS,
+    };
+
+    if (!apply_wheel_velocities(rover, velocity)) {
+      return DRIVE_INVALID_COMMAND;
+    }
+
+    steps++;
+  }
+
+  return DRIVE_INVALID_INPUT;
 }
 
 static float normalize_angle(float angle) {
- angle = fmodf(angle + PI_F, 2.0f * PI_F);
- if (angle < 0.0f) {
-   angle += 2.0f * PI_F;
- }
- return angle - PI_F;
-}
-
-static bool coordinate_is_finite(const struct coordinate *coordinate) {
- return coordinate != NULL && isfinite(coordinate->latitude) &&
-        isfinite(coordinate->longitude) &&
-        isfinite(coordinate->altitude);
-}
-
-static bool rover_is_valid(const struct rover_state *rover) {
- return rover != NULL && coordinate_is_finite(&rover->position) &&
-        isfinite(rover->heading_rad);
-}
-
-static struct wheel_velocity limit_wheel_velocities(
-   struct wheel_velocity velocity) {
- const float largest_magnitude =
-     fmaxf(fabsf(velocity.left), fabsf(velocity.right));
-
- if (largest_magnitude > MAX_WHEEL_VELOCITY) {
-   const float scale = MAX_WHEEL_VELOCITY / largest_magnitude;
-   velocity.left *= scale;
-   velocity.right *= scale;
- }
-
- return velocity;
+  while (angle > PI_F) {
+    angle -= 2.0f * PI_F;
+  }
+  while (angle < -PI_F) {
+    angle += 2.0f * PI_F;
+  }
+  return angle;
 }
 
 static bool apply_wheel_velocities(struct rover_state *rover,
-                                  struct wheel_velocity velocity) {
- if (!rover_is_valid(rover) || !isfinite(velocity.left) ||
-     !isfinite(velocity.right) ||
-     fabsf(velocity.left) > MAX_WHEEL_VELOCITY ||
-     fabsf(velocity.right) > MAX_WHEEL_VELOCITY) {
-   return false;
- }
+                                   struct wheel_velocity velocity) {
+  if (!isfinite(velocity.left) || !isfinite(velocity.right) ||
+      fabsf(velocity.left) > MAX_WHEEL_VELOCITY ||
+      fabsf(velocity.right) > MAX_WHEEL_VELOCITY) {
+    return false;
+  }
 
- const float linear_velocity =
-     WHEEL_RADIUS * (velocity.left + velocity.right) / 2.0f;
- const float angular_velocity =
-     WHEEL_RADIUS * (velocity.right - velocity.left) / WHEEL_SEPARATION;
+  const float linear_velocity =
+      WHEEL_RADIUS * (velocity.left + velocity.right) / 2.0f;
+  const float angular_velocity =
+      WHEEL_RADIUS * (velocity.right - velocity.left) / WHEEL_SEPARATION;
 
- rover->heading_rad = normalize_angle(
-     rover->heading_rad + angular_velocity * DRIVE_DT_SECONDS);
- rover->position.longitude +=
-     linear_velocity * cosf(rover->heading_rad) * DRIVE_DT_SECONDS;
- rover->position.latitude +=
-     linear_velocity * sinf(rover->heading_rad) * DRIVE_DT_SECONDS;
+  rover->heading_rad = normalize_angle(
+      rover->heading_rad + angular_velocity * DRIVE_DT_SECONDS);
+  rover->position.longitude +=
+      linear_velocity * cosf(rover->heading_rad) * DRIVE_DT_SECONDS;
+  rover->position.latitude +=
+      linear_velocity * sinf(rover->heading_rad) * DRIVE_DT_SECONDS;
 
- return rover_is_valid(rover);
-}
-
-enum drive_status drive_to_target(struct rover_state *rover,
-                                 const struct coordinate *target) {
- if (!rover_is_valid(rover) || !coordinate_is_finite(target)) {
-   return DRIVE_INVALID_INPUT;
- }
-
- rover->heading_rad = normalize_angle(rover->heading_rad);
-
- for (int step = 0; step < MAX_DRIVE_STEPS; step++) {
-   const float north_error =
-       target->latitude - rover->position.latitude;
-   const float east_error =
-       target->longitude - rover->position.longitude;
-   const float distance = hypotf(north_error, east_error);
-
-   if (distance <= TARGET_TOLERANCE) {
-     const struct wheel_velocity stopped = {0.0f, 0.0f};
-     if (!apply_wheel_velocities(rover, stopped)) {
-       return DRIVE_INVALID_COMMAND;
-     }
-     return DRIVE_REACHED_TARGET;
-   }
-
-   const float target_heading = atan2f(north_error, east_error);
-   const float heading_error =
-       normalize_angle(target_heading - rover->heading_rad);
-
-   const float angular_velocity =
-       clampf(HEADING_GAIN * heading_error, -MAX_ANGULAR_VELOCITY,
-              MAX_ANGULAR_VELOCITY);
-
-   /* Slow near the target and stop forward motion while facing away. */
-   const float distance_limited_velocity =
-       fminf(MAX_LINEAR_VELOCITY, distance);
-   const float heading_alignment = fmaxf(0.0f, cosf(heading_error));
-   const float linear_velocity =
-       distance_limited_velocity * heading_alignment;
-
-   struct wheel_velocity velocity = {
-       .left = (linear_velocity -
-                angular_velocity * WHEEL_SEPARATION / 2.0f) /
-               WHEEL_RADIUS,
-       .right = (linear_velocity +
-                 angular_velocity * WHEEL_SEPARATION / 2.0f) /
-                WHEEL_RADIUS,
-   };
-
-   velocity = limit_wheel_velocities(velocity);
-
-   if (!apply_wheel_velocities(rover, velocity)) {
-     return DRIVE_INVALID_COMMAND;
-   }
- }
-
- return DRIVE_MAX_STEPS_EXCEEDED;
+  return true;
 }
