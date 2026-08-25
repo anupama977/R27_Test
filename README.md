@@ -68,7 +68,7 @@ Correct initialization and cleanup of resources.
 Keep the existing architecture where possible.
 
 Part 3 — Differential-Drive Rover
-
+-
 Description
 
 The final part involves controlling a differential-drive rover.
@@ -110,7 +110,7 @@ Getting Started
 First understand the project structure and read the relevant source files before making changes.
 
 Build the project:
-
+--
 make build
 
 
@@ -141,7 +141,7 @@ We are interested in your understanding and problem-solving process, not just th
 Your README
 
 After completing the test, add a short explanation covering:
-
+--
 What you understood about each part.
 Your approach to solving the problems.
 What you changed and why.
@@ -150,7 +150,7 @@ Any challenges you faced.
 Any external resources or AI tools you used.
 
 Important
-
+--
 Read the existing code before modifying it.
 Do not unnecessarily rewrite working components.
 Do not modify tests just to make them pass.
@@ -173,7 +173,7 @@ Before submitting:
  Submit your repository link.
 
 Evaluation
-
+--
 The submission will be evaluated on:
 
 Correctness
