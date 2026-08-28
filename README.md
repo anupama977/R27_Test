@@ -111,13 +111,15 @@ First understand the project structure and read the relevant source files before
 
 Build the project:
 --
-make build
-
 
 Run the checks:
+
 (in the projects directory)
-cmake -S . -B build 
+
+cmake -S . -B build
+
 cmake --build build --verbose 
+
 ./build/queue_test
 
 To clean the build:
