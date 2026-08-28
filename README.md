@@ -123,7 +123,9 @@ cmake --build build --verbose
 ./build/queue_test
 
 To clean the build:
+
 rm -rf build 
+
 Do the checks steps again to create ur build file  
 
 Time Limit
