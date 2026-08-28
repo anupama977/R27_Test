@@ -10,17 +10,17 @@ This test evaluates your ability to understand, debug, and implement functionali
 
 The test has three parts:
 
-COBS Encoding & Decoding
+Encoding & Decoding
 Multithreading & Synchronization
 Differential-Drive Rover
 
 You are given an existing codebase with partially implemented functionality. Your task is to understand the code, identify the issues, implement the required changes, and verify your solution.
 
-Part 1 — COBS Encoding & Decoding
+Part 1 — Encoding & Decoding
 --
 Description
 
-The first part focuses on COBS (Consistent Overhead Byte Stuffing), commonly used in embedded communication.
+The first part focuses on encoding and decoding functions , commonly used in embedded communication.
 
 Relevant files:
 
@@ -32,7 +32,7 @@ What you need to do
 
 Understand the existing encoder and decoder.
 Fix any incorrect or incomplete logic.
-Handle zero bytes and buffer limits correctly.
+Handle buffer limits correctly.
 Handle invalid/edge-case inputs.
 Verify that encoding and then decoding returns the original data.
 
@@ -49,7 +49,7 @@ src/mutex.c
 src/main.c
 
 
-The application uses a circular message queue and multiple threads to pass data between different parts of the system.
+The application uses a message queue and multiple threads to pass data between different parts of the system.
 
 What you need to do
 
@@ -115,14 +115,14 @@ make build
 
 
 Run the checks:
-
-make check
-
+(in the projects directory)
+cmake -S . -B build 
+cmake --build build --verbose 
+./build/queue_test
 
 To clean the build:
-
-make clean
-
+rm -rf build 
+Do the checks steps again to create ur build file  
 
 Time Limit
 
