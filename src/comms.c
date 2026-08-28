@@ -31,14 +31,12 @@ void message_destroy(Message_Queue *queue){
 };
 
 int message_queue_push(Message_Queue *queue,const Message *msg){
-  sem_wait(&queue->empty);
-  pthread_mutex_lock(&queue->mutex);
-  queue->buffer[queue->tail]=*msg;
-  queue->tail=(queue->tail+1)%50;
-  pthread_mutex_unlock(&queue->mutex);
-  sem_post(&queue->full);
-  printf("Added Elements \n");
-  return 0;
+  /* 
+   * Make the logic for adding an element to the queue only when the queue is avaliabale and not full 
+   * Make the queue in such a way that it does not waste any memory and no extra memory is required .
+   *
+   */
+
 };
 
 int message_queue_pop(Message_Queue *queue,Message *msg){

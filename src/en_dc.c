@@ -1,9 +1,3 @@
-/*
- * cobs.c
- *
- * Consistent Overhead Byte Stuffing
- */
-
 #include "en_dc.h"
 #include <stdlib.h>
 
@@ -23,16 +17,10 @@
  * Functions
  ****************************************************************************/
 
-/* COBS-encode a string of input bytes.
- *
- * dst_buf_ptr:    The buffer into which the result will be written
- * dst_buf_len:    Length of the buffer into which the result will be written
- * src_ptr:        The byte string to be encoded
- * src_len         Length of the byte string to be encoded
- *
- * returns:        A struct containing the success status of the encoding
- *                 operation and the length of the result (that was written to
- *                 dst_buf_ptr)
+
+/* MAIN TASK ->
+ * OVERALL ITERATION THROUGH THE SOURCE BYTES GIVEN
+ * HANDELING ZERO BYTE logic 
  */
 cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
                                const void *src_ptr, size_t src_len) {
@@ -40,9 +28,8 @@ cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
   const uint8_t *src_read_ptr = src_ptr;
   const uint8_t *src_end_ptr = src_read_ptr + src_len;
   uint8_t *dst_buf_start_ptr = dst_buf_ptr;
-  uint8_t *dst_buf_end_ptr = dst_buf_start_ptr + dst_buf_len;
-  uint8_t *dst_code_write_ptr = dst_buf_ptr;
-  uint8_t *dst_write_ptr = dst_code_write_ptr + 1u;
+  uint8_t *dst_buf_end_ptr = dst_buf_start_ptr; 
+  uint8_t *dst_write_ptr = dst_code_write_ptr + 3u;
   uint8_t src_byte = 0u;
   uint8_t search_len = 1u;
 
@@ -54,22 +41,13 @@ cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
 
   if (src_len != 0u) {
     /* Iterate over the source bytes */
-    for (;;) {
-      /* Check for running out of output buffer space */
-      if (dst_write_ptr >= dst_buf_end_ptr) {
-        result.status |= COBS_ENCODE_OUT_BUFFER_OVERFLOW;
-        break;
-      }
+    for (int o=0;i<search_len;i++) {
+
 
       src_byte = *src_read_ptr++;
       if (src_byte == 0u) {
-        /* We found a zero byte */
-        *dst_code_write_ptr = search_len;
-        dst_code_write_ptr = dst_write_ptr++;
-        search_len = 1u;
-        if (src_read_ptr >= src_end_ptr) {
-          break;
-        }
+        /* Task to be done 
+         * Zero byte logic  */
       } else {
         /* Copy the non-zero byte to the destination buffer */
         *dst_write_ptr++ = src_byte;
