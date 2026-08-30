@@ -105,6 +105,79 @@ Avoid infinite loops.
 
 Path planning and PID control are not required.
 
+Environment Setup
+--
+This project uses CMake and POSIX threads (`pthread.h`, `semaphore.h`, `unistd.h`), so you need a C compiler, CMake, and a POSIX-compatible environment. Follow the steps for your OS below.
+
+### macOS
+
+1. Open Terminal.
+2. Check if you already have a compiler:
+   ```
+   clang --version
+   ```
+   - If this prints a version with no error, skip to step 4.
+   - If you get an error, install Xcode's command line tools:
+     ```
+     xcode-select --install
+     ```
+     Click "Install" in the popup, wait for it to finish, then run `clang --version` again to confirm.
+3. Install Homebrew (if you don't already have it): follow the instructions at [brew.sh](https://brew.sh/), then confirm with:
+   ```
+   brew --version
+   ```
+4. Install CMake and Ninja:
+   ```
+   brew install cmake ninja
+   ```
+5. Verify everything is installed:
+   ```
+   cmake --version
+   ninja --version
+   clang --version
+   ```
+
+### Linux (Debian/Ubuntu-based)
+
+1. Open a terminal.
+2. Update package lists and installed packages:
+   ```
+   sudo apt update && sudo apt upgrade
+   ```
+3. Install the build toolchain and CMake:
+   ```
+   sudo apt install build-essential cmake
+   ```
+4. Verify everything is installed:
+   ```
+   cmake --version
+   gcc --version
+   make --version
+   ```
+
+### Windows
+
+This codebase relies on POSIX-only headers (`pthread.h`, `semaphore.h`, `unistd.h`) that are not natively available with MSVC, so the simplest path is to use WSL (Windows Subsystem for Linux), which gives you a real Linux environment inside Windows.
+
+1. Open PowerShell as Administrator and install WSL with the default Ubuntu distribution:
+   ```
+   wsl --install
+   ```
+2. Restart your computer if prompted.
+3. Open the "Ubuntu" app from the Start Menu and finish setting up your Linux username/password.
+4. Once you're inside the Ubuntu terminal, follow the **Linux (Debian/Ubuntu-based)** steps above:
+   ```
+   sudo apt update && sudo apt upgrade
+   sudo apt install build-essential cmake
+   ```
+5. Verify everything is installed:
+   ```
+   cmake --version
+   gcc --version
+   make --version
+   ```
+6. Clone/copy the project into your WSL filesystem (e.g. `~/R27_Test`) and build it from the Ubuntu terminal, not from PowerShell/CMD.
+
 Getting Started
 
 First understand the project structure and read the relevant source files before making changes.
@@ -116,15 +189,23 @@ Run the checks:
 
 (in the projects directory)
 
+```
 cmake -S . -B build
+```
 
-cmake --build build --verbose 
+```
+cmake --build build --verbose
+```
 
+```
 ./build/queue_test
+```
 
 To clean the build:
 
-rm -rf build 
+```
+rm -rf build
+```
 
 Do the checks steps again to create ur build file  
 
@@ -198,5 +279,3 @@ GOOD LUCK!
 <p align="center">
   <img src="https://github.com/teamrudra/r25-test/blob/main/datasheets/feynman-simple.jpg" width="600" height="600"/>
 </p>
-     
-
