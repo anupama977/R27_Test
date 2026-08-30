@@ -17,7 +17,10 @@
  * Functions
  ****************************************************************************/
 
-/* Encode */
+/* Encode 
+ * TODO: check the code for incoming byte string and its reading 
+ * based on the algorithm used check if the encoded values being formed make sense 
+ * */
 encode_result frame_encode(void *dst_buf_ptr, size_t dst_buf_len,
                                const void *src_ptr, size_t src_len) {
   encode_result result = {0u, ENCODE_OK};
@@ -49,7 +52,6 @@ encode_result frame_encode(void *dst_buf_ptr, size_t dst_buf_len,
         }
         if (search_len == 0xFFu) {
           *dst_code_write_ptr = search_len;
-          dst_code_write_ptr = dst_write_ptr++;
           search_len = 1u;
         }
       }
@@ -68,7 +70,11 @@ encode_result frame_encode(void *dst_buf_ptr, size_t dst_buf_len,
   return result;
 }
 
-/* Decode */
+/* Decode 
+ * TODO: Errors in handelling full stream of bytes 
+ * Check the buffer length values and match it according to the used algorithm 
+ *
+ * */
 decode_result frame_decode(void *dst_buf_ptr, size_t dst_buf_len,
                                const void *src_ptr, size_t src_len) {
   decode_result result = {0u, DECODE_OK};
@@ -88,7 +94,7 @@ decode_result frame_decode(void *dst_buf_ptr, size_t dst_buf_len,
   }
 
   if (src_len != 0u) {
-    for (;;) {
+    for (int i=0;i<len_code;i++) {
       len_code = *src_read_ptr++;
       if (len_code == 0u) {
         result.status |= DECODE_ZERO_BYTE_IN_INPUT;
@@ -109,11 +115,11 @@ decode_result frame_decode(void *dst_buf_ptr, size_t dst_buf_len,
       }
 
       for (i = len_code; i != 0u; i--) {
-        src_byte = *src_read_ptr++;
+        src_byte = *src_read_ptr--;
         if (src_byte == 0u) {
           result.status |= DECODE_ZERO_BYTE_IN_INPUT;
         }
-        *dst_write_ptr++ = src_byte;
+  
       }
 
       if (src_read_ptr >= src_end_ptr) {
@@ -125,7 +131,7 @@ decode_result frame_decode(void *dst_buf_ptr, size_t dst_buf_len,
           result.status |= DECODE_OUT_BUFFER_OVERFLOW;
           break;
         }
-        *dst_write_ptr++ = '\0';
+
       }
     }
   }
