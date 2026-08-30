@@ -110,11 +110,20 @@ void *drive_write(void *arg){
     float dy=coordinate_target.longitude-rover.position.longitude;
     float error =hypotf(dx,dy);
     int status=1;
-    if (result_status==DRIVE_REACHED_TARGET && error<=0.10){
+    if (result_status==DRIVE_REACHED_TARGET && error<=0.07){
       status=0;
+    }
+    if(result_status!= DRIVE_REACHED_TARGET || error >0.07){
+      status=1;
+      break;
     }
     input_file_write(&input,&rover.position.latitude,&rover.position.longitude,&error,&status);
 
+  }
+  if(status==0){
+      printf("SUCCESS \n");
+  }else if(){
+      printf("Failes try again \n");
   }
   return NULL;
 }
