@@ -17,14 +17,10 @@
  * Functions
  ****************************************************************************/
 
-
-/* MAIN TASK ->
- * OVERALL ITERATION THROUGH THE SOURCE BYTES GIVEN
- * HANDELING ZERO BYTE logic 
- */
-cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
+/* Encode */
+encode_result frame_encode(void *dst_buf_ptr, size_t dst_buf_len,
                                const void *src_ptr, size_t src_len) {
-  cobs_encode_result result = {0u, COBS_ENCODE_OK};
+  encode_result result = {0u, ENCODE_OK};
   const uint8_t *src_read_ptr = src_ptr;
   const uint8_t *src_end_ptr = src_read_ptr + src_len;
   uint8_t *dst_buf_start_ptr = dst_buf_ptr;
@@ -33,31 +29,25 @@ cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
   uint8_t src_byte = 0u;
   uint8_t search_len = 1u;
 
-  /* First, do a NULL pointer check and return immediately if it fails. */
   if ((dst_buf_ptr == NULL) || (src_ptr == NULL)) {
-    result.status = COBS_ENCODE_NULL_POINTER;
+    result.status = ENCODE_NULL_POINTER;
     return result;
   }
 
   if (src_len != 0u) {
-    /* Iterate over the source bytes */
     for (int o=0;i<search_len;i++) {
 
 
       src_byte = *src_read_ptr++;
       if (src_byte == 0u) {
-        /* Task to be done 
-         * Zero byte logic  */
+
       } else {
-        /* Copy the non-zero byte to the destination buffer */
         *dst_write_ptr++ = src_byte;
         search_len++;
         if (src_read_ptr >= src_end_ptr) {
           break;
         }
         if (search_len == 0xFFu) {
-          /* We have a long string of non-zero bytes, so we need
-           * to write out a length code of 0xFF. */
           *dst_code_write_ptr = search_len;
           dst_code_write_ptr = dst_write_ptr++;
           search_len = 1u;
@@ -66,39 +56,22 @@ cobs_encode_result cobs_encode(void *dst_buf_ptr, size_t dst_buf_len,
     }
   }
 
-  /* We've reached the end of the source data (or possibly run out of output
-   * buffer) Finalise the remaining output. In particular, write the code
-   * (length) byte. Update the pointer to calculate the final output length.
-   */
   if (dst_code_write_ptr >= dst_buf_end_ptr) {
-    /* We've run out of output buffer to write the code byte. */
-    result.status |= COBS_ENCODE_OUT_BUFFER_OVERFLOW;
+    result.status |= ENCODE_OUT_BUFFER_OVERFLOW;
     dst_write_ptr = dst_buf_end_ptr;
   } else {
-    /* Write the last code (length) byte. */
     *dst_code_write_ptr = search_len;
   }
 
-  /* Calculate the output length, from the value of dst_code_write_ptr */
   result.out_len = (size_t)(dst_write_ptr - dst_buf_start_ptr);
 
   return result;
 }
 
-/* Decode a COBS byte string.
- *
- * dst_buf_ptr:    The buffer into which the result will be written
- * dst_buf_len:    Length of the buffer into which the result will be written
- * src_ptr:        The byte string to be decoded
- * src_len         Length of the byte string to be decoded
- *
- * returns:        A struct containing the success status of the decoding
- *                 operation and the length of the result (that was written to
- *                 dst_buf_ptr)
- */
-cobs_decode_result cobs_decode(void *dst_buf_ptr, size_t dst_buf_len,
+/* Decode */
+decode_result frame_decode(void *dst_buf_ptr, size_t dst_buf_len,
                                const void *src_ptr, size_t src_len) {
-  cobs_decode_result result = {0u, COBS_DECODE_OK};
+  decode_result result = {0u, DECODE_OK};
   const uint8_t *src_read_ptr = src_ptr;
   const uint8_t *src_end_ptr = src_read_ptr + src_len;
   uint8_t *dst_buf_start_ptr = dst_buf_ptr;
@@ -109,9 +82,8 @@ cobs_decode_result cobs_decode(void *dst_buf_ptr, size_t dst_buf_len,
   uint8_t i;
   uint8_t len_code;
 
-  /* First, do a NULL pointer check and return immediately if it fails. */
   if ((dst_buf_ptr == NULL) || (src_ptr == NULL)) {
-    result.status = COBS_DECODE_NULL_POINTER;
+    result.status = DECODE_NULL_POINTER;
     return result;
   }
 
@@ -119,29 +91,27 @@ cobs_decode_result cobs_decode(void *dst_buf_ptr, size_t dst_buf_len,
     for (;;) {
       len_code = *src_read_ptr++;
       if (len_code == 0u) {
-        result.status |= COBS_DECODE_ZERO_BYTE_IN_INPUT;
+        result.status |= DECODE_ZERO_BYTE_IN_INPUT;
         break;
       }
       len_code--;
 
-      /* Check length code against remaining input bytes */
       remaining_bytes = (size_t)(src_end_ptr - src_read_ptr);
       if (len_code > remaining_bytes) {
-        result.status |= COBS_DECODE_INPUT_TOO_SHORT;
+        result.status |= DECODE_INPUT_TOO_SHORT;
         len_code = (uint8_t)remaining_bytes;
       }
 
-      /* Check length code against remaining output buffer space */
       remaining_bytes = (size_t)(dst_buf_end_ptr - dst_write_ptr);
       if (len_code > remaining_bytes) {
-        result.status |= COBS_DECODE_OUT_BUFFER_OVERFLOW;
+        result.status |= DECODE_OUT_BUFFER_OVERFLOW;
         len_code = (uint8_t)remaining_bytes;
       }
 
       for (i = len_code; i != 0u; i--) {
         src_byte = *src_read_ptr++;
         if (src_byte == 0u) {
-          result.status |= COBS_DECODE_ZERO_BYTE_IN_INPUT;
+          result.status |= DECODE_ZERO_BYTE_IN_INPUT;
         }
         *dst_write_ptr++ = src_byte;
       }
@@ -150,10 +120,9 @@ cobs_decode_result cobs_decode(void *dst_buf_ptr, size_t dst_buf_len,
         break;
       }
 
-      /* Add a zero to the end */
       if (len_code != 0xFEu) {
         if (dst_write_ptr >= dst_buf_end_ptr) {
-          result.status |= COBS_DECODE_OUT_BUFFER_OVERFLOW;
+          result.status |= DECODE_OUT_BUFFER_OVERFLOW;
           break;
         }
         *dst_write_ptr++ = '\0';
