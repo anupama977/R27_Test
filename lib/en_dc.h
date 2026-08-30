@@ -1,7 +1,5 @@
-
-
-#ifndef COBS_H_
-#define COBS_H_
+#ifndef EN_DC_H_
+#define EN_DC_H_
 
 
 /*****************************************************************************
@@ -16,14 +14,10 @@
  * Defines
  ****************************************************************************/
 
-#define COBS_ENCODE_DST_BUF_LEN_MAX(SRC_LEN)            (((SRC_LEN) == 0u) ? 1u : ((SRC_LEN) + (((SRC_LEN) + 253u) / 254u)))
-#define COBS_DECODE_DST_BUF_LEN_MAX(SRC_LEN)            (((SRC_LEN) == 0u) ? 0u : ((SRC_LEN) - 1u))
+#define ENCODE_DST_BUF_LEN_MAX(SRC_LEN)            (((SRC_LEN) == 0u) ? 1u : ((SRC_LEN) + (((SRC_LEN) + 253u) / 254u)))
+#define DECODE_DST_BUF_LEN_MAX(SRC_LEN)            (((SRC_LEN) == 0u) ? 0u : ((SRC_LEN) - 1u))
 
-/*
- * For in-place encoding, the source data must be offset in the buffer by
- * the following amount (or more).
- */
-#define COBS_ENCODE_SRC_OFFSET(SRC_LEN)                 (((SRC_LEN) + 253u)/254u)
+#define ENCODE_SRC_OFFSET(SRC_LEN)                 (((SRC_LEN) + 253u)/254u)
 
 
 /*****************************************************************************
@@ -32,32 +26,32 @@
 
 typedef enum
 {
-    COBS_ENCODE_OK                  = 0x00,
-    COBS_ENCODE_NULL_POINTER        = 0x01,
-    COBS_ENCODE_OUT_BUFFER_OVERFLOW = 0x02
-} cobs_encode_status;
+    ENCODE_OK                  = 0x00,
+    ENCODE_NULL_POINTER        = 0x01,
+    ENCODE_OUT_BUFFER_OVERFLOW = 0x02
+} encode_status;
 
 typedef struct
 {
     size_t              out_len;
-    cobs_encode_status  status;
-} cobs_encode_result;
+    encode_status  status;
+} encode_result;
 
 
 typedef enum
 {
-    COBS_DECODE_OK                  = 0x00,
-    COBS_DECODE_NULL_POINTER        = 0x01,
-    COBS_DECODE_OUT_BUFFER_OVERFLOW = 0x02,
-    COBS_DECODE_ZERO_BYTE_IN_INPUT  = 0x04,
-    COBS_DECODE_INPUT_TOO_SHORT     = 0x08
-} cobs_decode_status;
+    DECODE_OK                  = 0x00,
+    DECODE_NULL_POINTER        = 0x01,
+    DECODE_OUT_BUFFER_OVERFLOW = 0x02,
+    DECODE_ZERO_BYTE_IN_INPUT  = 0x04,
+    DECODE_INPUT_TOO_SHORT     = 0x08
+} decode_status;
 
 typedef struct
 {
     size_t              out_len;
-    cobs_decode_status  status;
-} cobs_decode_result;
+    decode_status  status;
+} decode_result;
 
 
 /*****************************************************************************
@@ -68,32 +62,10 @@ typedef struct
 extern "C" {
 #endif
 
-/* COBS-encode a string of input bytes.
- *
- * dst_buf_ptr:    The buffer into which the result will be written
- * dst_buf_len:    Length of the buffer into which the result will be written
- * src_ptr:        The byte string to be encoded
- * src_len         Length of the byte string to be encoded
- *
- * returns:        A struct containing the success status of the encoding
- *                 operation and the length of the result (that was written to
- *                 dst_buf_ptr)
- */
-cobs_encode_result cobs_encode(void * dst_buf_ptr, size_t dst_buf_len,
+encode_result frame_encode(void * dst_buf_ptr, size_t dst_buf_len,
                                const void * src_ptr, size_t src_len);
 
-/* Decode a COBS byte string.
- *
- * dst_buf_ptr:    The buffer into which the result will be written
- * dst_buf_len:    Length of the buffer into which the result will be written
- * src_ptr:        The byte string to be decoded
- * src_len         Length of the byte string to be decoded
- *
- * returns:        A struct containing the success status of the decoding
- *                 operation and the length of the result (that was written to
- *                 dst_buf_ptr)
- */
-cobs_decode_result cobs_decode(void * dst_buf_ptr, size_t dst_buf_len,
+decode_result frame_decode(void * dst_buf_ptr, size_t dst_buf_len,
                                const void * src_ptr, size_t src_len);
 
 #ifdef __cplusplus
@@ -101,4 +73,4 @@ cobs_decode_result cobs_decode(void * dst_buf_ptr, size_t dst_buf_len,
 #endif
 
 
-#endif /* COBS_H_ */
+#endif /* EN_DC_H_ */
